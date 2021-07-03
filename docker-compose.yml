@@ -1,0 +1,32 @@
+version: "3"
+services:
+  joomla:
+    build:
+      context: ${JOOMLA_BASE_DIR}
+    volumes:
+      - ${CONFIGS_DIR}/joomla.conf:/etc/apache2/sites-available/joomla.conf # config for apache
+      - ${CONFIGS_DIR}/launch_joomla.sh:/launch_joomla.sh # jommla start script
+      - ${JOOMLA_BASE_DIR}/${JOOMLA_SRC_PATH}:/var/${JOOMLA_SRC_PATH} # Joomla files
+      - ${LOG_DIR}/apache/:/var/log/apache2/ # apache logs
+      - ./.env/:/.env # env variable used to make some config
+    ports:
+      - ${APP_PORT}:80
+    links:
+      - bdd
+    depends_on:
+      - bdd
+  bdd:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${JOOMLA_USERNAME}
+      MYSQL_PASSWORD: ${JOOMLA_PASSWORD}
+    ports:
+      - ${BDD_PORT}:3306
+    volumes:
+      - ${BDD_DIR}:/var/lib/mysql # Storage
+      - ${LOG_DIR}/mysql:/var/log/mysql # logs
+      - ${CONFIGS_DIR}/log.cnf:/etc/mysql/mysql.conf.d/log.cnf # config to add log path
+    # entrypoint: ""
+    # command: bash -c "chown -R 999:999 /var/log/mysql && exec /entrypoint.sh mysqld" # add missing right to write logs
